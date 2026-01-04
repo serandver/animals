@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "animals": [
+    { "id": "cat", "names": { "uk": "Кіт", "en": "Cat" }, "image": "images/cat.webp" },
+    { "id": "dog", "names": { "uk": "Собака", "en": "Dog" }, "image": "images/dog.webp" },
+    { "id": "cow", "names": { "uk": "Корова", "en": "Cow" }, "image": "images/cow.webp" },
+    { "id": "horse", "names": { "uk": "Кінь", "en": "Horse" }, "image": "images/horse.webp" },
+    { "id": "sheep", "names": { "uk": "Вівця", "en": "Sheep" }, "image": "images/sheep.webp" },
+    { "id": "pig", "names": { "uk": "Свиня", "en": "Pig" }, "image": "images/pig.webp" },
+    { "id": "lion", "names": { "uk": "Лев", "en": "Lion" }, "image": "images/lion.webp" },
+    { "id": "elephant", "names": { "uk": "Слон", "en": "Elephant" }, "image": "images/elephant.webp" },
+    { "id": "owl", "names": { "uk": "Сова", "en": "Owl" }, "image": "images/owl.webp" },
+    { "id": "bee", "names": { "uk": "Бджола", "en": "Bee" }, "image": "images/bee.webp" }
+  ]
+}
