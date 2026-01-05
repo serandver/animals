@@ -27,6 +27,8 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
+
+
     <ImageButton
         android:id="@+id/btnAuto"
         android:layout_width="56dp"
@@ -37,9 +39,9 @@
         android:padding="14dp"
         android:scaleType="centerInside"
         android:src="@drawable/ic_play_arrow_24"
-        android:tint="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:tint="@android:color/white" />
 
     <ImageButton
         android:id="@+id/btnLock"
@@ -51,9 +53,9 @@
         android:padding="14dp"
         android:scaleType="centerInside"
         android:src="@drawable/ic_lock_24"
-        android:tint="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/btnAuto"/>
+        app:layout_constraintStart_toEndOf="@id/btnAuto"
+        app:tint="@android:color/white" />
 
     <ImageButton
         android:id="@+id/btnMute"
@@ -65,9 +67,22 @@
         android:padding="14dp"
         android:scaleType="centerInside"
         android:src="@drawable/ic_volume_off_24"
-        android:tint="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/btnLock"/>
+        app:layout_constraintStart_toEndOf="@id/btnLock"
+        app:tint="@android:color/white" />
 
+    <ImageButton
+        android:id="@+id/btnExit"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_margin="16dp"
+        android:background="@drawable/bg_toggle_button"
+        android:contentDescription="Exit"
+        android:padding="14dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_back_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/btnMute"
+        app:tint="@android:color/white" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

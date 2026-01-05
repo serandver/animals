@@ -1,9 +1,11 @@
 package com.app.animals;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
+import android.view.View;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -21,6 +23,7 @@ import com.app.animals.ui.SlidesAdapter;
 import com.app.animals.data.AppPrefs;
 
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -31,6 +34,9 @@ public class PlayerActivity extends AppCompatActivity {
     private ImageButton btnAuto;
     private ImageButton btnLock;
     private ImageButton btnMute;
+
+    private ImageButton btnExit;
+
     private List<Animal> items;
     private String lang;
     private TextToSpeech tts;
@@ -41,7 +47,7 @@ public class PlayerActivity extends AppCompatActivity {
     private boolean ttsReady = false;
     private boolean mute = false;
     private boolean locked = false;
-    private final long SLIDE_DURATION = 10_000;
+    private static final long SLIDE_DURATION = 10_000L;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,31 +61,27 @@ public class PlayerActivity extends AppCompatActivity {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                if (locked) {
-                    return;
-                }
-                setEnabled(false);
-                getOnBackPressedDispatcher().onBackPressed();
+                if (locked) return;
+                goToStart();
             }
         });
+
+
 
 
         btnAuto = findViewById(R.id.btnAuto);
         btnLock = findViewById(R.id.btnLock);
         btnMute = findViewById(R.id.btnMute);
+        btnExit = findViewById(R.id.btnExit);
+
 
         btnAuto.setSelected(AppPrefs.getAutoplay(this));
         btnLock.setSelected(AppPrefs.getLocked(this));
         btnMute.setSelected(AppPrefs.getMute(this));
 
+        autoPlay = btnAuto.isSelected();
         locked = btnLock.isSelected();
-        applyImmersive(locked);
-
-        btnLock.setOnClickListener(v -> {
-            btnLock.setSelected(!btnLock.isSelected());
-            locked = btnLock.isSelected();
-            applyImmersive(locked);
-        });
+        mute = btnMute.isSelected();
 
         btnAuto.setOnClickListener(v -> {
             btnAuto.setSelected(!btnAuto.isSelected());
@@ -95,6 +97,7 @@ public class PlayerActivity extends AppCompatActivity {
             locked = btnLock.isSelected();
             AppPrefs.setLocked(PlayerActivity.this, locked);
             applyImmersive(locked);
+            btnExit.setVisibility(locked ? View.INVISIBLE : View.VISIBLE);
         });
         btnMute.setOnClickListener(v -> {
             btnMute.setSelected(!btnMute.isSelected());
@@ -103,10 +106,10 @@ public class PlayerActivity extends AppCompatActivity {
 
             if (mute && tts != null) tts.stop();
         });
-
-
-        mute = btnMute.isSelected();
-
+        btnExit.setOnClickListener(v -> {
+            if (locked) return;
+            goToStart();
+        });
 
         tts = new TextToSpeech(this, status -> {
             if (status == TextToSpeech.SUCCESS) {
@@ -140,11 +143,12 @@ public class PlayerActivity extends AppCompatActivity {
 
         List<Animal> all = AnimalsRepository.loadAll(this);
         if ("all".equals(category)) {
-            items = all;
+            items = new ArrayList<>(all);
         } else {
             items = AnimalsRepository.filterByCategory(all, category);
         }
         Collections.shuffle(items);
+
 
         TextView title = findViewById(R.id.txtTitle);
         pager = findViewById(R.id.pager);
@@ -173,6 +177,18 @@ public class PlayerActivity extends AppCompatActivity {
         });
     }
 
+    private void goToStart() {
+        stopAutoPlay();
+        if (tts != null) tts.stop();
+
+        Intent i = new Intent(this, StartActivity.class);
+        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(i);
+        finish();
+    }
+
+
+
     private void startAutoPlay() {
         stopAutoPlay();
 
@@ -193,9 +209,13 @@ public class PlayerActivity extends AppCompatActivity {
     }
 
     private void stopAutoPlay() {
+        if (items == null || items.isEmpty() || pager == null) return;
         autoPlay = false;
-        handler.removeCallbacksAndMessages(null);
+        if (slideRunnable != null) handler.removeCallbacks(slideRunnable);
+        if (speak2Runnable != null) handler.removeCallbacks(speak2Runnable);
+        if (speak7Runnable != null) handler.removeCallbacks(speak7Runnable);
     }
+
 
 
     private String getName(Animal a) {
