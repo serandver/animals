@@ -7,8 +7,13 @@ import android.util.Log;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
+
 
 import com.app.animals.data.AnimalsRepository;
 import com.app.animals.model.Animal;
@@ -19,19 +24,20 @@ import java.util.List;
 import java.util.Locale;
 
 public class PlayerActivity extends AppCompatActivity {
-
     private final Handler handler = new Handler();
     private ViewPager2 pager;
     private ImageButton btnAuto;
+    private ImageButton btnLock;
     private List<Animal> items;
     private String lang;
     private TextToSpeech tts;
-    private boolean ttsReady = false;
-    private boolean mute = false;
     private Runnable slideRunnable;
     private Runnable speak2Runnable;
     private Runnable speak7Runnable;
     private boolean autoPlay = false;
+    private boolean ttsReady = false;
+    private boolean mute = false;
+    private boolean locked = false;
     private final long SLIDE_DURATION = 10_000;
 
     @Override
@@ -39,13 +45,34 @@ public class PlayerActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
 
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (locked) {
+                    return;
+                }
+                setEnabled(false);
+                getOnBackPressedDispatcher().onBackPressed();
+            }
+        });
+
+
         btnAuto = findViewById(R.id.btnAuto);
-        ImageButton btnLock = findViewById(R.id.btnLock);
+        btnLock = findViewById(R.id.btnLock);
         ImageButton btnMute = findViewById(R.id.btnMute);
 
         btnAuto.setSelected(false);
         btnLock.setSelected(false);
         btnMute.setSelected(false);
+
+        locked = btnLock.isSelected();
+        applyImmersive(locked);
+
+        btnLock.setOnClickListener(v -> {
+            btnLock.setSelected(!btnLock.isSelected());
+            locked = btnLock.isSelected();
+            applyImmersive(locked);
+        });
 
         btnAuto.setOnClickListener(v -> {
             btnAuto.setSelected(!btnAuto.isSelected());
@@ -203,8 +230,27 @@ public class PlayerActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        applyImmersive(locked);
+
         if (btnAuto.isSelected()) {
             startAutoPlay();
         }
     }
+
+    private void applyImmersive(boolean enabled) {
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), !enabled);
+
+        WindowInsetsControllerCompat controller =
+                new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView());
+
+        if (enabled) {
+            controller.hide(WindowInsetsCompat.Type.systemBars());
+            controller.setSystemBarsBehavior(
+                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            );
+        } else {
+            controller.show(WindowInsetsCompat.Type.systemBars());
+        }
+    }
+
 }
