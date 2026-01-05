@@ -18,6 +18,8 @@ import androidx.core.view.WindowInsetsControllerCompat;
 import com.app.animals.data.AnimalsRepository;
 import com.app.animals.model.Animal;
 import com.app.animals.ui.SlidesAdapter;
+import com.app.animals.data.AppPrefs;
+
 
 import java.util.Collections;
 import java.util.List;
@@ -28,6 +30,7 @@ public class PlayerActivity extends AppCompatActivity {
     private ViewPager2 pager;
     private ImageButton btnAuto;
     private ImageButton btnLock;
+    private ImageButton btnMute;
     private List<Animal> items;
     private String lang;
     private TextToSpeech tts;
@@ -45,6 +48,10 @@ public class PlayerActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
 
+        String category = getIntent().getStringExtra(StartActivity.EXTRA_CATEGORY);
+        String intentLang = getIntent().getStringExtra(StartActivity.EXTRA_LANG);
+        lang = (intentLang != null) ? intentLang : AppPrefs.getLang(this);
+
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -59,11 +66,11 @@ public class PlayerActivity extends AppCompatActivity {
 
         btnAuto = findViewById(R.id.btnAuto);
         btnLock = findViewById(R.id.btnLock);
-        ImageButton btnMute = findViewById(R.id.btnMute);
+        btnMute = findViewById(R.id.btnMute);
 
-        btnAuto.setSelected(false);
-        btnLock.setSelected(false);
-        btnMute.setSelected(false);
+        btnAuto.setSelected(AppPrefs.getAutoplay(this));
+        btnLock.setSelected(AppPrefs.getLocked(this));
+        btnMute.setSelected(AppPrefs.getMute(this));
 
         locked = btnLock.isSelected();
         applyImmersive(locked);
@@ -77,27 +84,29 @@ public class PlayerActivity extends AppCompatActivity {
         btnAuto.setOnClickListener(v -> {
             btnAuto.setSelected(!btnAuto.isSelected());
             autoPlay = btnAuto.isSelected();
+            AppPrefs.setAutoplay(PlayerActivity.this, autoPlay);
 
-            if (autoPlay) {
-                startAutoPlay();
-            } else {
-                stopAutoPlay();
-            }
+            if (autoPlay) startAutoPlay();
+            else stopAutoPlay();
         });
-        btnLock.setOnClickListener(v -> btnLock.setSelected(!btnLock.isSelected()));
+
+        btnLock.setOnClickListener(v -> {
+            btnLock.setSelected(!btnLock.isSelected());
+            locked = btnLock.isSelected();
+            AppPrefs.setLocked(PlayerActivity.this, locked);
+            applyImmersive(locked);
+        });
         btnMute.setOnClickListener(v -> {
             btnMute.setSelected(!btnMute.isSelected());
             mute = btnMute.isSelected();
+            AppPrefs.setMute(PlayerActivity.this, mute);
 
-            if (mute && tts != null) {
-                tts.stop();
-            }
+            if (mute && tts != null) tts.stop();
         });
+
 
         mute = btnMute.isSelected();
 
-        String category = getIntent().getStringExtra(StartActivity.EXTRA_CATEGORY);
-        lang = getIntent().getStringExtra(StartActivity.EXTRA_LANG);
 
         tts = new TextToSpeech(this, status -> {
             if (status == TextToSpeech.SUCCESS) {
