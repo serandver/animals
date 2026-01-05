@@ -12,6 +12,7 @@ import com.app.animals.data.AnimalsRepository;
 import com.app.animals.model.Animal;
 import com.app.animals.data.AppPrefs;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class StartActivity extends AppCompatActivity {
@@ -30,7 +31,9 @@ public class StartActivity extends AppCompatActivity {
         rbUk.setChecked(!"en".equals(savedLang));
 
         List<Animal> all = AnimalsRepository.loadAll(this);
-        List<String> categories = AnimalsRepository.getCategories(all);
+        List<String> categories = new ArrayList<>();
+        categories.add("all");
+        categories.addAll(AnimalsRepository.getCategories(all));
 
         LinearLayout container = findViewById(R.id.categoriesContainer);
 
@@ -52,6 +55,7 @@ public class StartActivity extends AppCompatActivity {
 
     private String displayName(String cat) {
         switch (cat) {
+            case "all": return "Всі";
             case "animals": return "Тварини";
             case "birds": return "Птахи";
             case "insects": return "Комахи";

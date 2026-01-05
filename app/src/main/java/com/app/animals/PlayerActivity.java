@@ -139,7 +139,11 @@ public class PlayerActivity extends AppCompatActivity {
         });
 
         List<Animal> all = AnimalsRepository.loadAll(this);
-        items = AnimalsRepository.filterByCategory(all, category);
+        if ("all".equals(category)) {
+            items = all;
+        } else {
+            items = AnimalsRepository.filterByCategory(all, category);
+        }
         Collections.shuffle(items);
 
         TextView title = findViewById(R.id.txtTitle);
