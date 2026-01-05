@@ -1,7 +1,9 @@
 package com.app.animals;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.speech.tts.TextToSpeech;
+import android.util.Log;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -12,43 +14,56 @@ import com.app.animals.data.AnimalsRepository;
 import com.app.animals.model.Animal;
 import com.app.animals.ui.SlidesAdapter;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
 public class PlayerActivity extends AppCompatActivity {
 
+    private final Handler handler = new Handler();
+    private ViewPager2 pager;
+    private ImageButton btnAuto;
     private List<Animal> items;
     private String lang;
-
     private TextToSpeech tts;
     private boolean ttsReady = false;
     private boolean mute = false;
-
-    private ViewPager2 pager;
-
+    private Runnable slideRunnable;
+    private Runnable speak2Runnable;
+    private Runnable speak7Runnable;
+    private boolean autoPlay = false;
+    private final long SLIDE_DURATION = 10_000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
 
-        ImageButton btnAuto = findViewById(R.id.btnAuto);
+        btnAuto = findViewById(R.id.btnAuto);
         ImageButton btnLock = findViewById(R.id.btnLock);
         ImageButton btnMute = findViewById(R.id.btnMute);
 
-// початкові стани (поки що хардкод)
         btnAuto.setSelected(false);
         btnLock.setSelected(false);
         btnMute.setSelected(false);
 
-        btnAuto.setOnClickListener(v -> btnAuto.setSelected(!btnAuto.isSelected()));
+        btnAuto.setOnClickListener(v -> {
+            btnAuto.setSelected(!btnAuto.isSelected());
+            autoPlay = btnAuto.isSelected();
+
+            if (autoPlay) {
+                startAutoPlay();
+            } else {
+                stopAutoPlay();
+            }
+        });
         btnLock.setOnClickListener(v -> btnLock.setSelected(!btnLock.isSelected()));
         btnMute.setOnClickListener(v -> {
             btnMute.setSelected(!btnMute.isSelected());
             mute = btnMute.isSelected();
 
             if (mute && tts != null) {
-                tts.stop(); // якщо під час промови увімкнули mute — зупиняємо
+                tts.stop();
             }
         });
 
@@ -59,28 +74,43 @@ public class PlayerActivity extends AppCompatActivity {
 
         tts = new TextToSpeech(this, status -> {
             if (status == TextToSpeech.SUCCESS) {
-                Locale locale = "en".equals(lang) ? Locale.US : new Locale("uk", "UA");
-                int res = tts.setLanguage(locale);
-                ttsReady = (res != TextToSpeech.LANG_MISSING_DATA && res != TextToSpeech.LANG_NOT_SUPPORTED);
 
-                if (ttsReady) {
-                    runOnUiThread(this::speakCurrent); // <-- ОЦЕ ДОДАТИ
+                Locale locale;
+                if ("uk".equals(lang)) {
+                    locale = new Locale("uk", "UA");
+                } else {
+                    locale = Locale.US;
+                }
+
+                int result = tts.setLanguage(locale);
+
+                ttsReady = result != TextToSpeech.LANG_MISSING_DATA
+                        && result != TextToSpeech.LANG_NOT_SUPPORTED;
+
+                if (!ttsReady) {
+                    Log.w("TTS", "Language NOT supported: " + locale);
+                } else {
+                    Log.i("TTS", "Language OK: " + locale);
+
+                    runOnUiThread(() -> {
+                        if (!autoPlay) speakCurrent();
+                    });
                 }
             } else {
+                Log.e("TTS", "TTS init failed: " + status);
                 ttsReady = false;
             }
         });
 
-
         List<Animal> all = AnimalsRepository.loadAll(this);
         items = AnimalsRepository.filterByCategory(all, category);
+        Collections.shuffle(items);
 
         TextView title = findViewById(R.id.txtTitle);
         pager = findViewById(R.id.pager);
 
         pager.setAdapter(new SlidesAdapter(this, items));
 
-        // показати назву першого
         if (!items.isEmpty()) {
             title.setText(getName(items.get(0)));
         } else {
@@ -90,13 +120,43 @@ public class PlayerActivity extends AppCompatActivity {
         pager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
-                if (position >= 0 && position < items.size()) {
-                    title.setText(getName(items.get(position)));
+                title.setText(getName(items.get(position)));
+                if (!autoPlay) {
                     speakName(items.get(position));
                 }
+
+                if (autoPlay) {
+                    startAutoPlay();
+                }
             }
+
         });
     }
+
+    private void startAutoPlay() {
+        stopAutoPlay();
+
+        autoPlay = true;
+
+        speak2Runnable = () -> speakCurrent();
+        speak7Runnable = () -> speakCurrent();
+
+        slideRunnable = () -> {
+            int next = (pager.getCurrentItem() + 1) % items.size();
+            pager.setCurrentItem(next, true);
+            startAutoPlay();
+        };
+
+        handler.postDelayed(speak2Runnable, 2_000);
+        handler.postDelayed(speak7Runnable, 7_000);
+        handler.postDelayed(slideRunnable, SLIDE_DURATION);
+    }
+
+    private void stopAutoPlay() {
+        autoPlay = false;
+        handler.removeCallbacksAndMessages(null);
+    }
+
 
     private String getName(Animal a) {
         return "en".equals(lang) ? a.nameEn : a.nameUk;
@@ -108,10 +168,9 @@ public class PlayerActivity extends AppCompatActivity {
 
         String text = "en".equals(lang) ? a.nameEn : a.nameUk;
 
-        // Унікальний utteranceId, щоб не залипало
         String utteranceId = "name_" + a.id + "_" + System.currentTimeMillis();
 
-        tts.stop(); // на всяк випадок, щоб не було черги
+        tts.stop();
         tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, utteranceId);
     }
 
@@ -135,5 +194,17 @@ public class PlayerActivity extends AppCompatActivity {
         speakName(items.get(pos));
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopAutoPlay();
+    }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (btnAuto.isSelected()) {
+            startAutoPlay();
+        }
+    }
 }
