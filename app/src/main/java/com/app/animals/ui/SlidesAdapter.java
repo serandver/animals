@@ -9,9 +9,11 @@ import android.widget.ImageView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.app.animals.BuildConfig;
 import com.app.animals.R;
 import com.app.animals.model.Animal;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.signature.ObjectKey;
 
 import java.util.List;
 
@@ -36,7 +38,11 @@ public class SlidesAdapter extends RecyclerView.Adapter<SlidesAdapter.VH> {
     public void onBindViewHolder(@NonNull VH h, int position) {
         Animal a = items.get(position);
         String url = "file:///android_asset/" + a.imageAssetPath;
-        Glide.with(context).load(url).into(h.img);
+
+        Glide.with(context)
+                .load(url)
+                .signature(new ObjectKey(BuildConfig.VERSION_CODE))
+                .into(h.img);
     }
 
     @Override
