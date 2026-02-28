@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -53,6 +54,7 @@ public class PlayerActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         String category = getIntent().getStringExtra(StartActivity.EXTRA_CATEGORY);
         String intentLang = getIntent().getStringExtra(StartActivity.EXTRA_LANG);
@@ -198,8 +200,13 @@ public class PlayerActivity extends AppCompatActivity {
         speak7Runnable = () -> speakCurrent();
 
         slideRunnable = () -> {
-            int next = (pager.getCurrentItem() + 1) % items.size();
-            pager.setCurrentItem(next, true);
+            int current = pager.getCurrentItem();
+            int next = current + 1;
+            if (next >= items.size()) {
+                pager.setCurrentItem(0, false);
+            } else {
+                pager.setCurrentItem(next, true);
+            }
             startAutoPlay();
         };
 
