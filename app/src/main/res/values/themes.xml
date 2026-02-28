@@ -5,5 +5,5 @@
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
     </style>
 
-    <style name="Theme.Animals" parent="Base.Theme.Animals" />
+    <style name="Theme.Animals" parent="Theme.MaterialComponents.DayNight.NoActionBar" />
 </resources>

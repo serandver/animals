@@ -2,64 +2,85 @@ package com.app.animals;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.RadioButton;
+import android.view.LayoutInflater;
+import android.widget.GridLayout;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.app.animals.data.AnimalsRepository;
-import com.app.animals.model.Animal;
 import com.app.animals.data.AppPrefs;
+import com.google.android.material.card.MaterialCardView;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class StartActivity extends AppCompatActivity {
 
     public static final String EXTRA_CATEGORY = "extra_category";
-    public static final String EXTRA_LANG = "extra_lang"; // "uk" or "en"
+    public static final String EXTRA_LANG = "extra_lang";
+
+    static class CategoryItem {
+        final String id;      // "animals", "birds"...
+        final String titleUk; // "Тварини"...
+        final int iconRes;    // тимчасово
+
+        CategoryItem(String id, String titleUk, int iconRes) {
+            this.id = id;
+            this.titleUk = titleUk;
+            this.iconRes = iconRes;
+        }
+    }
+
+    private final List<CategoryItem> categories = Arrays.asList(
+            new CategoryItem("animals", "Тварини", R.drawable.ic_category_placeholder),
+            new CategoryItem("birds", "Птахи", R.drawable.ic_category_placeholder),
+            new CategoryItem("reptiles", "Плазуни", R.drawable.ic_category_placeholder),
+            new CategoryItem("insects", "Комахи", R.drawable.ic_category_placeholder),
+            new CategoryItem("fish", "Риби", R.drawable.ic_category_placeholder),
+            new CategoryItem("amphibians", "Земноводні", R.drawable.ic_category_placeholder)
+    );
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
-        RadioButton rbUk = findViewById(R.id.langUk);
-        RadioButton rbEn = findViewById(R.id.langEn);
-        String savedLang = AppPrefs.getLang(this);
-        rbEn.setChecked("en".equals(savedLang));
-        rbUk.setChecked(!"en".equals(savedLang));
 
-        List<Animal> all = AnimalsRepository.loadAll(this);
-        List<String> categories = new ArrayList<>();
-        categories.add("all");
-        categories.addAll(AnimalsRepository.getCategories(all));
+        // MVP: фіксуємо укр. мову (UI перемикача немає)
+        AppPrefs.setLang(this, "uk");
 
-        LinearLayout container = findViewById(R.id.categoriesContainer);
+        GridLayout grid = findViewById(R.id.categoriesGrid);
+        LayoutInflater inflater = LayoutInflater.from(this);
 
-        for (String cat : categories) {
-            Button b = new Button(this);
-            b.setAllCaps(false);
-            b.setText(displayName(cat)); // локалізуємо назву кнопки
-            b.setOnClickListener(v -> {
-                String lang = rbEn.isChecked() ? "en" : "uk";
-                AppPrefs.setLang(StartActivity.this, lang);
+        for (CategoryItem cat : categories) {
+            MaterialCardView card = (MaterialCardView) inflater.inflate(R.layout.item_category, grid, false);
+
+            TextView title = card.findViewById(R.id.txtTitle);
+            ImageView icon = card.findViewById(R.id.imgIcon);
+
+            title.setText(cat.titleUk);
+            icon.setImageResource(cat.iconRes);
+
+            // TODO: пізніше дамо кожній картці свій пастельний фон
+            // card.setCardBackgroundColor(...)
+
+            card.setOnClickListener(v -> {
                 Intent i = new Intent(StartActivity.this, PlayerActivity.class);
-                i.putExtra(EXTRA_CATEGORY, cat);
-                i.putExtra(EXTRA_LANG, lang);
+                i.putExtra(EXTRA_CATEGORY, cat.id);
+                i.putExtra(EXTRA_LANG, "uk");
                 startActivity(i);
             });
-            container.addView(b);
-        }
-    }
 
-    private String displayName(String cat) {
-        switch (cat) {
-            case "all": return "Всі";
-            case "animals": return "Тварини";
-            case "birds": return "Птахи";
-            case "insects": return "Комахи";
-            default: return cat;
+            GridLayout.LayoutParams lp = new GridLayout.LayoutParams();
+            lp.width = 0;
+            lp.height = GridLayout.LayoutParams.WRAP_CONTENT;
+
+// 2 колонки: кожна займає 1/2
+            lp.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
+            lp.rowSpec = GridLayout.spec(GridLayout.UNDEFINED);
+
+            card.setLayoutParams(lp);
+            grid.addView(card);
         }
     }
 }
