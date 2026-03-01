@@ -32,13 +32,13 @@ public class StartActivity extends AppCompatActivity {
         }
     }
 
-    private final List<CategoryItem> categories = Arrays.asList(
-            new CategoryItem("animals", "Тварини", R.drawable.ic_category_placeholder),
-            new CategoryItem("birds", "Птахи", R.drawable.ic_category_placeholder),
-            new CategoryItem("reptiles", "Плазуни", R.drawable.ic_category_placeholder),
-            new CategoryItem("insects", "Комахи", R.drawable.ic_category_placeholder),
-            new CategoryItem("fish", "Риби", R.drawable.ic_category_placeholder),
-            new CategoryItem("amphibians", "Земноводні", R.drawable.ic_category_placeholder)
+    List<CategoryItem> categories = Arrays.asList(
+            new CategoryItem("animals", "Тварини", R.drawable.ic_lion),
+            new CategoryItem("birds", "Птахи", R.drawable.ic_parrot),
+            new CategoryItem("reptiles", "Плазуни", R.drawable.ic_crocodile),
+            new CategoryItem("insects", "Комахи", R.drawable.ic_bee),
+            new CategoryItem("fish", "Риби", R.drawable.ic_koi),
+            new CategoryItem("amphibians", "Земноводні", R.drawable.ic_frog_tomato)
     );
 
     @Override
@@ -46,11 +46,11 @@ public class StartActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_start);
 
-        // MVP: фіксуємо укр. мову (UI перемикача немає)
-        AppPrefs.setLang(this, "uk");
-
         GridLayout grid = findViewById(R.id.categoriesGrid);
         LayoutInflater inflater = LayoutInflater.from(this);
+        int spacingDp = 10;
+        float d = getResources().getDisplayMetrics().density;
+        int spacingPx = (int) (spacingDp * d);
 
         for (CategoryItem cat : categories) {
             MaterialCardView card = (MaterialCardView) inflater.inflate(R.layout.item_category, grid, false);
@@ -60,27 +60,50 @@ public class StartActivity extends AppCompatActivity {
 
             title.setText(cat.titleUk);
             icon.setImageResource(cat.iconRes);
-
-            // TODO: пізніше дамо кожній картці свій пастельний фон
-            // card.setCardBackgroundColor(...)
-
-            card.setOnClickListener(v -> {
-                Intent i = new Intent(StartActivity.this, PlayerActivity.class);
-                i.putExtra(EXTRA_CATEGORY, cat.id);
-                i.putExtra(EXTRA_LANG, "uk");
-                startActivity(i);
-            });
+            card.setCardBackgroundColor(getCategoryColor(cat.id));
 
             GridLayout.LayoutParams lp = new GridLayout.LayoutParams();
             lp.width = 0;
-            lp.height = GridLayout.LayoutParams.WRAP_CONTENT;
-
-// 2 колонки: кожна займає 1/2
             lp.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
-            lp.rowSpec = GridLayout.spec(GridLayout.UNDEFINED);
-
+            lp.setMargins(spacingPx / 2, spacingPx / 2, spacingPx / 2, spacingPx / 2);
             card.setLayoutParams(lp);
+
+            card.setOnClickListener(v -> {
+                v.animate()
+                        .scaleX(0.95f)
+                        .scaleY(0.95f)
+                        .setDuration(80)
+                        .withEndAction(() -> {
+                            v.animate().scaleX(1f).scaleY(1f).setDuration(80).start();
+
+                            Intent i = new Intent(StartActivity.this, PlayerActivity.class);
+                            i.putExtra(EXTRA_CATEGORY, cat.id);
+                            i.putExtra(EXTRA_LANG, "uk");
+                            startActivity(i);
+                        })
+                        .start();
+            });
             grid.addView(card);
+
+            card.post(() -> {
+                int w = card.getWidth();
+                if (w > 0 && card.getLayoutParams().height != w) {
+                    card.getLayoutParams().height = w;
+                    card.requestLayout();
+                }
+            });
         }
+    }
+
+    private int getCategoryColor(String id) {
+        return switch (id) {
+            case "animals" -> 0xFFF6D8AE;
+            case "birds" -> 0xFFE4C1F9;
+            case "reptiles" -> 0xFFCDEAC0;
+            case "insects" -> 0xFFFFF3B0;
+            case "fish" -> 0xFFA8DADC;
+            case "amphibians" -> 0xFFD0F4DE;
+            default -> 0xFFFFFFFF;
+        };
     }
 }
