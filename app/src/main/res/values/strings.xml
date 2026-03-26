@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Animals</string>
+    <string name="slide_show">Слайдшоу</string>
+    <string name="back">Назад</string>
+    <string name="sound">Звук</string>
+    <string name="lock">Блокування</string>
 </resources>

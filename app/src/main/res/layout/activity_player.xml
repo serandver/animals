@@ -19,6 +19,8 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:padding="12dp"
+        android:gravity="center"
+        android:textAlignment="center"
         android:textSize="24sp"
         android:textStyle="bold"
         android:textColor="@android:color/white"
@@ -27,62 +29,44 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
+    <LinearLayout
+        android:id="@+id/controlPanel"
+        android:layout_width="match_parent"
+        android:layout_height="96dp"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="12dp"
+        android:layout_marginBottom="16dp"
+        android:weightSum="4"
+        app:layout_constraintBottom_toBottomOf="parent">
 
+        <ImageButton
+            android:id="@+id/btnBack"
+            style="@style/PlayerButton"
+            android:background="@drawable/bg_btn_back"
+            android:src="@drawable/ic_btn_back"
+            android:contentDescription="@string/back" />
 
-    <ImageButton
-        android:id="@+id/btnAuto"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
-        android:layout_margin="16dp"
-        android:background="@drawable/bg_toggle_button"
-        android:contentDescription="Auto slideshow"
-        android:padding="14dp"
-        android:scaleType="centerInside"
-        android:src="@drawable/ic_play_arrow_24"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:tint="@android:color/white" />
+        <ImageButton
+            android:id="@+id/btnPlay"
+            style="@style/PlayerButton"
+            android:background="@drawable/bg_btn_play_selector"
+            android:src="@drawable/ic_btn_play"
+            android:contentDescription="@string/slide_show" />
 
-    <ImageButton
-        android:id="@+id/btnLock"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
-        android:layout_margin="16dp"
-        android:background="@drawable/bg_toggle_button"
-        android:contentDescription="Lock"
-        android:padding="14dp"
-        android:scaleType="centerInside"
-        android:src="@drawable/ic_lock_24"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/btnAuto"
-        app:tint="@android:color/white" />
+        <ImageButton
+            android:id="@+id/btnSound"
+            style="@style/PlayerButton"
+            android:background="@drawable/bg_btn_sound_selector"
+            android:src="@drawable/ic_btn_sound_on"
+            android:contentDescription="@string/sound" />
 
-    <ImageButton
-        android:id="@+id/btnMute"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
-        android:layout_margin="16dp"
-        android:background="@drawable/bg_toggle_button"
-        android:contentDescription="Mute"
-        android:padding="14dp"
-        android:scaleType="centerInside"
-        android:src="@drawable/ic_volume_off_24"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/btnLock"
-        app:tint="@android:color/white" />
-
-    <ImageButton
-        android:id="@+id/btnExit"
-        android:layout_width="56dp"
-        android:layout_height="56dp"
-        android:layout_margin="16dp"
-        android:background="@drawable/bg_toggle_button"
-        android:contentDescription="Exit"
-        android:padding="14dp"
-        android:scaleType="centerInside"
-        android:src="@drawable/ic_back_24"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/btnMute"
-        app:tint="@android:color/white" />
+        <ImageButton
+            android:id="@+id/btnLock"
+            style="@style/PlayerButton"
+            android:background="@drawable/bg_btn_lock_selector"
+            android:src="@drawable/ic_btn_lock"
+            android:contentDescription="@string/lock" />
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

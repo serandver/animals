@@ -22,6 +22,7 @@ import com.app.animals.data.AnimalsRepository;
 import com.app.animals.model.Animal;
 import com.app.animals.ui.SlidesAdapter;
 import com.app.animals.data.AppPrefs;
+import com.app.animals.ui.DepthPageTransformer;
 
 
 import java.util.ArrayList;
@@ -32,11 +33,13 @@ import java.util.Locale;
 public class PlayerActivity extends AppCompatActivity {
     private final Handler handler = new Handler();
     private ViewPager2 pager;
-    private ImageButton btnAuto;
+    private ImageButton btnPlay;
     private ImageButton btnLock;
-    private ImageButton btnMute;
+    private ImageButton btnSound;
+    private ImageButton btnBack;
 
-    private ImageButton btnExit;
+    private Runnable playPulseRunnable;
+    private boolean playPulseGrowing = false;
 
     private List<Animal> items;
     private String lang;
@@ -48,7 +51,7 @@ public class PlayerActivity extends AppCompatActivity {
     private boolean ttsReady = false;
     private boolean mute = false;
     private boolean locked = false;
-    private static final long SLIDE_DURATION = 10_000L;
+    private static final long SLIDE_DURATION = 6_000L;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,46 +74,63 @@ public class PlayerActivity extends AppCompatActivity {
 
 
 
-        btnAuto = findViewById(R.id.btnAuto);
+        btnPlay = findViewById(R.id.btnPlay);
         btnLock = findViewById(R.id.btnLock);
-        btnMute = findViewById(R.id.btnMute);
-        btnExit = findViewById(R.id.btnExit);
+        btnSound = findViewById(R.id.btnSound);
+        btnBack = findViewById(R.id.btnBack);
 
 
-        btnAuto.setSelected(AppPrefs.getAutoplay(this));
-        btnLock.setSelected(AppPrefs.getLocked(this));
-        btnMute.setSelected(AppPrefs.getMute(this));
+        autoPlay = AppPrefs.getAutoplay(this);
+        locked = AppPrefs.getLocked(this);
+        mute = AppPrefs.getMute(this);
 
-        autoPlay = btnAuto.isSelected();
-        locked = btnLock.isSelected();
-        mute = btnMute.isSelected();
+        updatePlayButtonUi();
+        updateLockButtonUi();
+        updateSoundButtonUi();
 
-        btnAuto.setOnClickListener(v -> {
-            btnAuto.setSelected(!btnAuto.isSelected());
-            autoPlay = btnAuto.isSelected();
+        btnPlay.setOnClickListener(v -> {
+            btnPlay.animate().scaleX(0.92f).scaleY(0.92f).setDuration(70)
+                    .withEndAction(() -> btnPlay.animate().scaleX(1f).scaleY(1f).setDuration(70).start())
+                    .start();
+
+            autoPlay = !autoPlay;
             AppPrefs.setAutoplay(PlayerActivity.this, autoPlay);
+            updatePlayButtonUi();
 
             if (autoPlay) startAutoPlay();
             else stopAutoPlay();
         });
 
         btnLock.setOnClickListener(v -> {
-            btnLock.setSelected(!btnLock.isSelected());
-            locked = btnLock.isSelected();
+            btnLock.animate().scaleX(0.92f).scaleY(0.92f).setDuration(70)
+                    .withEndAction(() -> btnLock.animate().scaleX(1f).scaleY(1f).setDuration(70).start())
+                    .start();
+
+            locked = !locked;
             AppPrefs.setLocked(PlayerActivity.this, locked);
             applyImmersive(locked);
-            btnExit.setVisibility(locked ? View.INVISIBLE : View.VISIBLE);
+            updateLockButtonUi();
         });
-        btnMute.setOnClickListener(v -> {
-            btnMute.setSelected(!btnMute.isSelected());
-            mute = btnMute.isSelected();
+        btnSound.setOnClickListener(v -> {
+            btnSound.animate().scaleX(0.92f).scaleY(0.92f).setDuration(70)
+                    .withEndAction(() -> btnSound.animate().scaleX(1f).scaleY(1f).setDuration(70).start())
+                    .start();
+
+            mute = !mute;
             AppPrefs.setMute(PlayerActivity.this, mute);
+            updateSoundButtonUi();
 
             if (mute && tts != null) tts.stop();
         });
-        btnExit.setOnClickListener(v -> {
+        btnBack.setOnClickListener(v -> {
             if (locked) return;
-            goToStart();
+
+            btnBack.animate().scaleX(0.92f).scaleY(0.92f).setDuration(70)
+                    .withEndAction(() -> {
+                        btnBack.animate().scaleX(1f).scaleY(1f).setDuration(70).start();
+                        goToStart();
+                    })
+                    .start();
         });
 
         tts = new TextToSpeech(this, status -> {
@@ -153,12 +173,13 @@ public class PlayerActivity extends AppCompatActivity {
 
 
         TextView title = findViewById(R.id.txtTitle);
+        title.setAlpha(1f);
         pager = findViewById(R.id.pager);
-
         pager.setAdapter(new SlidesAdapter(this, items));
+        pager.setPageTransformer(new DepthPageTransformer());
 
         if (!items.isEmpty()) {
-            title.setText(getName(items.get(0)));
+            updateTitleAnimated(title, getName(items.get(0)));
         } else {
             title.setText("No items");
         }
@@ -166,7 +187,7 @@ public class PlayerActivity extends AppCompatActivity {
         pager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
-                title.setText(getName(items.get(position)));
+                updateTitleAnimated(title, getName(items.get(position)));
                 if (!autoPlay) {
                     speakName(items.get(position));
                 }
@@ -177,6 +198,20 @@ public class PlayerActivity extends AppCompatActivity {
             }
 
         });
+    }
+
+    private void updateTitleAnimated(TextView title, String newText) {
+        title.animate()
+                .alpha(0f)
+                .setDuration(120)
+                .withEndAction(() -> {
+                    title.setText(newText);
+                    title.animate()
+                            .alpha(1f)
+                            .setDuration(180)
+                            .start();
+                })
+                .start();
     }
 
     private void goToStart() {
@@ -210,8 +245,8 @@ public class PlayerActivity extends AppCompatActivity {
             startAutoPlay();
         };
 
-        handler.postDelayed(speak2Runnable, 2_000);
-        handler.postDelayed(speak7Runnable, 7_000);
+        handler.postDelayed(speak2Runnable, 1_000);
+        handler.postDelayed(speak7Runnable, 5_000);
         handler.postDelayed(slideRunnable, SLIDE_DURATION);
     }
 
@@ -249,6 +284,7 @@ public class PlayerActivity extends AppCompatActivity {
             tts.shutdown();
             tts = null;
         }
+        stopPlayPulse();
     }
 
     private void speakCurrent() {
@@ -265,6 +301,7 @@ public class PlayerActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         stopAutoPlay();
+        stopPlayPulse();
     }
 
     @Override
@@ -272,7 +309,7 @@ public class PlayerActivity extends AppCompatActivity {
         super.onResume();
         applyImmersive(locked);
 
-        if (btnAuto.isSelected()) {
+        if (autoPlay) {
             startAutoPlay();
         }
     }
@@ -291,6 +328,71 @@ public class PlayerActivity extends AppCompatActivity {
         } else {
             controller.show(WindowInsetsCompat.Type.systemBars());
         }
+    }
+
+    private void updatePlayButtonUi() {
+        btnPlay.setImageResource(
+                autoPlay
+                        ? R.drawable.ic_btn_pause
+                        : R.drawable.ic_btn_play
+        );
+        btnPlay.setSelected(autoPlay);
+
+        if (autoPlay) {
+            startPlayPulse();
+        } else {
+            stopPlayPulse();
+        }
+    }
+
+    private void updateSoundButtonUi() {
+        btnSound.setImageResource(
+                mute
+                        ? R.drawable.ic_btn_sound_off
+                        : R.drawable.ic_btn_sound_on
+        );
+        btnSound.setSelected(mute);
+    }
+
+    private void updateLockButtonUi() {
+        btnLock.setImageResource(R.drawable.ic_btn_lock);
+        btnLock.setSelected(locked);
+        btnBack.setVisibility(locked ? View.INVISIBLE : View.VISIBLE);
+    }
+
+    private void startPlayPulse() {
+        stopPlayPulse();
+
+        playPulseRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (!autoPlay || btnPlay == null) return;
+
+                float targetScale = playPulseGrowing ? 1.0f : 1.08f;
+                playPulseGrowing = !playPulseGrowing;
+
+                btnPlay.animate()
+                        .scaleX(targetScale)
+                        .scaleY(targetScale)
+                        .setDuration(450)
+                        .withEndAction(() -> handler.postDelayed(playPulseRunnable, 80))
+                        .start();
+            }
+        };
+
+        handler.post(playPulseRunnable);
+    }
+
+    private void stopPlayPulse() {
+        if (btnPlay != null) {
+            btnPlay.animate().cancel();
+            btnPlay.setScaleX(1f);
+            btnPlay.setScaleY(1f);
+        }
+        if (playPulseRunnable != null) {
+            handler.removeCallbacks(playPulseRunnable);
+        }
+        playPulseGrowing = false;
     }
 
 }
