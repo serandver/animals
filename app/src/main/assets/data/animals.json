@@ -12,7 +12,7 @@
     { "id": "lion", "category":"animals", "names": { "uk": "Лев", "en": "Lion" }, "image": "images/lion.webp" },
     { "id": "tiger", "category":"animals", "names": { "uk": "Тигр", "en": "Tiger" }, "image": "images/tiger.webp" },
     { "id": "elephant", "category":"animals", "names": { "uk": "Слон", "en": "Elephant" }, "image": "images/elephant.webp" },
-    { "id": "giraffe", "category":"animals", "names": { "uk": "Жираф", "en": "Giraffe" }, "image": "images/giraffe.webp" },
+    { "id": "giraffe", "category":"animals", "names": { "uk": "Жирафа", "en": "Giraffe" }, "image": "images/giraffe.webp" },
     { "id": "zebra", "category":"animals", "names": { "uk": "Зебра", "en": "Zebra" }, "image": "images/zebra.webp" },
     { "id": "bear", "category":"animals", "names": { "uk": "Ведмідь", "en": "Bear" }, "image": "images/bear.webp" },
     { "id": "wolf", "category":"animals", "names": { "uk": "Вовк", "en": "Wolf" }, "image": "images/wolf.webp" },
